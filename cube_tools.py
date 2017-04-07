@@ -117,6 +117,3 @@ class cube():
                    if (iz % 6 == 5): fout.write('\n')
                fout.write("\n")
         fout.close()
-
-
-        Whyyyyy
