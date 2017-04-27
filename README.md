@@ -10,3 +10,6 @@ A python library and tool to read in and manipulate Gaussian cube files. This co
 - Integrate around the whole cube file
 - Take the planar average
 
+```bash
+./cube_tools.py arg1
+```
