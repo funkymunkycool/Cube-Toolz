@@ -1,12 +1,15 @@
------------
-Cube Tools
------------
+----
+Cube Toolz
+----
 
 A python library and tool to read in and manipulate Gaussian cube files. This code allows you to:
-    Read and write Gaussian cube files
-    Translate and rotate cube data
-    Integrate around a particular atom
-    Integrate around a sphere
-    Integrate around the whole cube file
-    Take the planar average
+- Read and write Gaussian cube files
+- Translate and rotate cube data
+- Integrate around a particular atom
+- Integrate around a sphere
+- Integrate around the whole cube file
+- Take the planar average
 
+```bash
+./cube_tools.py arg1
+```
