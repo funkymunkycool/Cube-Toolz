@@ -136,13 +136,3 @@ class cube():
     def translate_cube(self,
 
 
-Pooo
-
-
-
-wweee
-
-
-Whyyy what is happeninng
-
-Other stuff
