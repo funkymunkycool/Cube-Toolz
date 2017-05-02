@@ -118,7 +118,6 @@ class cube():
                    if (iz % 6 == 5): fout.write('\n')
                fout.write("\n")
         fout.close()
-<<<<<<< HEAD
 
     def square_cube(self):
         '''
@@ -135,13 +134,3 @@ class cube():
         return None
 
     def translate_cube(self,
-=======
-        
-        
-        
-
-Some bullshit yeah
-
-
-Even more bullshit
->>>>>>> 699028aacf853f54d37cfd02da38e3fd9e16f374
