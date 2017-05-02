@@ -2,6 +2,7 @@
 import numpy as np 
 from os.path import isfile 
 from sys import exit
+from scipy import ndimage
 
 '''
 -----------
@@ -117,3 +118,19 @@ class cube():
                    if (iz % 6 == 5): fout.write('\n')
                fout.write("\n")
         fout.close()
+
+    def square_cube(self):
+        '''
+        Some bullshit
+        '''
+        self.data=self.data**2
+        return None
+
+    def rotate_cube(self,angle,axes=(0,1)):
+        '''
+        Some bullshit
+        '''
+        self.data=ndimage.rotate(self.data,angle,axes=axes,mode='wrap')
+        return None
+
+    def translate_cube(self,
