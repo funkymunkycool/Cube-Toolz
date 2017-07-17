@@ -16,6 +16,7 @@ positional arguments:
   Files                 Cube files used in program
 
 optional arguments:
+
   -h, --help            show this help message and exit
   -a, --add             Add two or more cube files together
   -s, --subtract        Subtract two or more cube files together
