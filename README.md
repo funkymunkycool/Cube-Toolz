@@ -16,9 +16,8 @@ positional arguments:
   Files                 Cube files used in program
 
 optional arguments:
-
-  -h, --help            show this help message and exit
-  -a, --add             Add two or more cube files together
+   -h, --help            show this help message and exit
+-  -a, --add             Add two or more cube files together
   -s, --subtract        Subtract two or more cube files together
   -p [POWER], --power [POWER]
                         Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).
