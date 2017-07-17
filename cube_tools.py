@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import time
-import numpy as np 
-from os.path import isfile 
-from sys import exit
+import numpy as np
+from os.path import isfile
+from sys import exit,argv
 from scipy import ndimage
 from scipy.ndimage.filters import gaussian_filter
 from scipy.constants import physical_constants
@@ -30,10 +30,13 @@ Version      Date              Coder          Changes
 0.1       07/04/2017        A. El-Sayed       Initial Version
 0.2       13/07/2017        A. El-Sayed       Option to run as main program or use as library. All functions written in
 '''
-
+__version__ = 0.2
 
 class cube():
-    ''' Cube Class'''
+    '''
+    Cube Class:
+    Includes a bunch of methods to manipulate cube data
+    '''
 
     def __init__(self,fname=None):
         if fname != None:
@@ -70,12 +73,15 @@ class cube():
 
 
     def read_cube(self,fname):
-        """Class docstring."""
+        """
+        Method to read cube file. Just needs the filename
+        """
+
         with open(fname, 'r') as fin:
             self.filename = fname
             self.comment1 = fin.readline() #Save 1st comment
             self.comment2 = fin.readline() #Save 2nd comment
-            nOrigin = fin.readline().split() # Number of Atoms and Origin 
+            nOrigin = fin.readline().split() # Number of Atoms and Origin
             self.natoms = int(nOrigin[0]) #Number of Atoms
             self.origin = np.array([float(nOrigin[1]),float(nOrigin[2]),float(nOrigin[3])]) #Position of Origin
             nVoxel = fin.readline().split() #Number of Voxels
@@ -102,9 +108,9 @@ class cube():
             if i != self.NX*self.NY*self.NZ: raise NameError, "FSCK!"
         return None
 
-    def write_cube(self,fname,comment='Cube file written by CubeToolz\nCubeToolz 0.1'):
+    def write_cube(self,fname,comment='Cube file written by CubeToolz\nCubeToolz %3.1f' % __version__):
         '''
-        Output a Gaussian Cube file
+        Write out a Gaussian Cube file
         '''
         try:
             with open(fname,'w') as fout:
@@ -130,58 +136,34 @@ class cube():
             self.terminate_code()
         return None
 
-    def square_cube(self):
+    def square_cube(self,power=2):
         '''
-        Some bullshit
+        Function to raise cube data to a power. Squares cube data by default.
         '''
-        self.data=self.data**2
+        self.data=self.data**power
+        print power
         return None
-
-
 
     def rotate_cube(self,angle,axes=None):
         '''
-        Some bullshit
+        Rotate cube data around a plane. The plane is defined in the axes variable. For example, to rotate along the xy plane, axes would be defined as (0,1). 
         '''
         self.data = ndimage.rotate(self.data,angle,axes=axes,mode='wrap')
         self.NX,self.NY,self.NZ = np.shape(self.data)
         return None
 
-    def rotate_atoms(self, angle, v=np.array([0,0,1]), rotate_cell=False):
-        angle *= np.pi / 180
-        v /= np.linalg.norm(v)
-        if isinstance(v,list):
-            v = np.array(v)
-        c = np.cos(angle)
-        s = np.sin(angle)
-        center = np.array([0,0,0])
-        center = np.array([np.max(np.array(self.atomsXYZ)[:,0])/2.,np.max(np.array(self.atomsXYZ)[:,1])/2.,np.max(np.array(self.atomsXYZ)[:,2])/.2])
-
-        p = self.atomsXYZ - center
-        self.atomsXYZ[:] = (c * p - np.cross(p, s * v) +
-                                       np.outer(np.dot(p, v), (1.0 - c) * v) +
-                                       center)
-
-        if rotate_cell:
-            rotcell = np.array([self.X,self.Y,self.Z]) 
-            rotcell[:] = (c * rotcell -
-                          np.cross(rotcell, s * v) +
-                          np.outer(np.dot(rotcell, v), (1.0 - c) * v))
-            #self.set_cell(rotcell)
-            self.X,self.Y,self.Z = rotcell[0],rotcell[1],rotcell[2]
-        return None
-
-    def rotate(self,angle,axis):
-        '''
-        Rotates atoms and cube file together.
-        Need to rotate atoms then put them in center of cell! Remember that
-        '''
 
     def translate_cube(self,tVector):
+        '''
+        Translate cube data by some vector. The vector is given as a list to the tVector function.
+        '''
         self.data = ndimage.shift(self.data,tVector,mode='wrap')
         return None
 
     def planar_average(self,axis):
+        '''
+        Calculate the planar average along an axis. The axis is given as a string of either x,y or z.
+        '''
         bohrM=physical_constants['Bohr radius'][0]
         bohrA=physical_constants['Bohr radius'][0]*1e10
         if axis == 'x':
@@ -199,20 +181,29 @@ class cube():
         return PlanAv
 
     def planar_averageG(self,axis,sigma):
+        '''
+        Broaden the planar average along an axis. The axis is given as a string of either x,y or z. A broadening value is also needed.
+        '''
         PlanAvG = self.planar_average(axis)
         PlanAvG[:,1] = gaussian_filter(PlanAvG[:,1],sigma)
         return PlanAvG
 
     def cube_int(self):
+        '''
+        Integrate the entire cube data.
+        '''
         angstrom=physical_constants['Bohr radius'][0]*1e10
         vol=np.linalg.det(np.array([self.X,self.Y,self.Z]))
         edensity=np.sum(self.data)
         nelectron=vol*edensity
-        
+
         print 'Number of electrons: %.7g' % (nelectron)
         return nelectron
 
     def cube_int_atom(self,atomID,radius):
+        '''
+        Integrate the cube data in a sphere around a particular atom. Needs the atom number (note that atom 0 is the first atom). Also needs a radius of the sphere.
+        '''
         nelectron = 0.0
         voxelMatrix = [self.X,self.Y,self.Z]
         vol = np.linalg.det(voxelMatrix)
@@ -228,10 +219,13 @@ class cube():
         final=time.time()
         forTime = final - initial
         print 'for loop: %.2f s' % forTime
-   
+
         return nelectron
 
     def cube_int_ref(self,ref,radius):
+        '''
+        Integrate the cube data in a sphere around a point. Needs the atom number (note that atom 0 is the first atom). Also needs the point as a list.
+        '''
         nelectron = 0.0
         ind = 0
         voxelMatrix = [self.X,self.Y,self.Z]
@@ -249,86 +243,57 @@ class cube():
         final=time.time()
         forTime = final - initial
         print 'for loop: %.2f s' % forTime
-   
+
         return nelectron
 
-    def time_loop(self):
-        initial=time.time()
-        for x in xrange(self.NX):
-            for y in xrange(self.NY):
-                for z in xrange(self.NZ):
-                    a=self.data[x][y][z]
-        final=time.time()
-        rtime = final - initial
-        print 'for loop: %.2f s' % rtime
-       
-        initial=time.time()
-        nelec = 0.0
-        for ind,point in enumerate(np.nditer(self.data)):
-            nelec += point
-        final=time.time()
-        rtime = final - initial
-        print 'NP iter: %.2f s' % rtime
-        print nelec
-
-        initial=time.time()
-        vol=np.linalg.det(np.array([self.X,self.Y,self.Z]))
-        it = np.nditer(self.data, flags=['multi_index'])
-        nelectron = 0.0
-        radius = 100
-        atomID = self.atomsXYZ[100] 
-        while not it.finished:
-            nelec += it[0]
-            xPos = it.multi_index[0] * self.X[0] / 1.88
-            yPos = it.multi_index[1] * self.Y[1] / 1.88
-            zPos = it.multi_index[2] * self.Z[2] / 1.88
-            distance = 8 #np.sqrt((xPos - atomID[0])**2 + (yPos - atomID[1])**2 +(zPos - atomID[2])**2)
-            if distance <= radius:
-                nelectron += float(it[0])#points[ind] 
-            it.iternext()
-        final=time.time()
-        rtime = final - initial
-        print nelectron*vol
-        print 'NP iter: %.2f s' % rtime
-
-        return None
 
 def add_cubes(files):
     cubes = [cube(fin) for fin in files]
     print "====== Adding cube files ======"
     cube_out = copy.deepcopy(cubes[0])
-    
+
     for ctmp in cubes[1:]:
-        cube_out.data += ctmp.data 
+        cube_out.data += ctmp.data
     print "====== Writing output cube as diff.cube ======"
-    cube_out.write_cube('diff.cube') 
+    cube_out.write_cube('diff.cube')
     return cube_out
 
-def square_cubes(files):
+def diff_cubes(files):
+    cubes = [cube(fin) for fin in files]
+    print "====== Subtracting cube files ======"
+    cube_out = copy.deepcopy(cubes[0])
+
+    for ctmp in cubes[1:]:
+        cube_out.data -= ctmp.data
+    print "====== Writing output cube as diff.cube ======"
+    cube_out.write_cube('diff.cube')
+    return cube_out
+
+def square_cubes(files,power):
     cubes = [cube(fin) for fin in files]
     print "====== Squaring cube files ======"
-    [ctmp.square_cube() for ctmp in cubes] 
-    
+    [ctmp.square_cube(power) for ctmp in cubes]
+
     print "====== Writing output cubes as squareN.cube ======"
     if len(cubes) == 1:
-        cubes[0].write_cube('square.cube') 
+        cubes[0].write_cube('square.cube')
     else:
         for ind,cout in enumerate(cubes):
-            cout.write_cube('square%d.cube' % ind) 
-    return None 
+            cout.write_cube('square%d.cube' % ind)
+    return None
 
 def translate_cubes(files,tVector):
     cubes = [cube(fin) for fin in files]
     print "====== Squaring cube files ======"
-    [ctmp.translate_cube(tVector) for ctmp in cubes] 
-    
+    [ctmp.translate_cube(tVector) for ctmp in cubes]
+
     print "====== Writing output cubes as translateN.cube ======"
     if len(cubes) == 1:
-        cubes[0].write_cube('translate.cube') 
+        cubes[0].write_cube('translate.cube')
     else:
         for ind,cout in enumerate(cubes):
-            cout.write_cube('translate%d.cube' % ind) 
-    return None 
+            cout.write_cube('translate%d.cube' % ind)
+    return None
 
 
 
@@ -338,25 +303,34 @@ def main():
 
     parser.add_argument("Files",help="Cube files used in program",nargs = '+')
     parser.add_argument("-a","--add",help="Add two or more cube files together",action = "store_true")
-    parser.add_argument("-s","--square",help="Square a cube file",action = "store_true")
+    parser.add_argument("-s","--subtract",help="Subtract two or more cube files together",action = "store_true")
+    parser.add_argument("-p","--power",help="Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).",nargs='?',const=2,type=int)
     parser.add_argument("-t","--translate",help="Translate a cube file. Requires a translation vector as an argument.", nargs = 3,type=float)
+    if len(argv) <= 2:
+        parser.print_help()
+
     args = parser.parse_args()
 
     if args.add:
-        if len(args.Files) >= 2: 
+        if len(args.Files) >= 2:
             add_cubes(args.Files)
         else:
             print "Error: To use the add function, two or more cube files need to be specified."
+    if args.subtract:
+        if len(args.Files) >= 2:
+            diff_cubes(args.Files)
+        else:
+            print "Error: To use the subtract function, two or more cube files need to be specified."
     if args.square:
         if args.Files:
-            square_cubes(args.Files)
+            square_cubes(args.Files,args.square)
         else:
            print "Error: At least one cube file needed to calculate its square."
     if args.translate:
         if args.Files:
-            translate_cubes(args.Files,args.translate) 
-        
+            translate_cubes(args.Files,args.translate)
+
     return None
 
 if __name__ == '__main__':
-    None#main()
+    main()
