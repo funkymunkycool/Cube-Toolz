@@ -321,7 +321,7 @@ def main():
             diff_cubes(args.Files)
         else:
             print "Error: To use the subtract function, two or more cube files need to be specified."
-    if args.square:
+    if args.power:
         if args.Files:
             square_cubes(args.Files,args.square)
         else:
