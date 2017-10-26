@@ -137,6 +137,7 @@ class cube():
         return None
 
     def square_cube(self,power=2):
+
         '''
         Function to raise cube data to a power. Squares cube data by default.
         '''
@@ -218,7 +219,7 @@ class cube():
                    if distance <= radius:    nelectron += self.data[x][y][z] * vol
         final=time.time()
         forTime = final - initial
-        print 'for loop: %.2f s' % forTime
+        #print 'for loop: %.2f s' % forTime
 
         return nelectron
 
@@ -242,7 +243,7 @@ class cube():
                    ind += 1
         final=time.time()
         forTime = final - initial
-        print 'for loop: %.2f s' % forTime
+        #print 'for loop: %.2f s' % forTime
 
         return nelectron
 
@@ -258,7 +259,7 @@ def add_cubes(files):
     cube_out.write_cube('diff.cube')
     return cube_out
 
-def diff_cubes(files):
+def diff1_cubes(files):
     cubes = [cube(fin) for fin in files]
     print "====== Subtracting cube files ======"
     cube_out = copy.deepcopy(cubes[0])
@@ -321,9 +322,9 @@ def main():
             diff_cubes(args.Files)
         else:
             print "Error: To use the subtract function, two or more cube files need to be specified."
-    if args.square:
+    if args.power:
         if args.Files:
-            square_cubes(args.Files,args.square)
+            square_cubes(args.Files,args.power)
         else:
            print "Error: At least one cube file needed to calculate its square."
     if args.translate:
