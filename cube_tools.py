@@ -9,6 +9,7 @@ from scipy.constants import physical_constants
 import argparse,copy
 import pdb
 from argparse import RawTextHelpFormatter
+from skimage import transform
 
 '''
 -----------
@@ -248,13 +249,40 @@ class cube():
         return nelectron
 
     def super_cube(self,new_size):
+        cell = np.array((self.NX * self.X, self.NY * self.Y, self.Z * self.NZ))
         new_data = np.zeros([new_size[0]*self.NX,new_size[1]*self.NY,new_size[2]*self.NZ])
+        new_xyz = self.atomsXYZ 
+        n_newcells = np.prod(new_size)
+        new_xyz = np.array(tuple(self.atomsXYZ)*n_newcells)
+        counter = 0 
         for x in xrange(new_size[0]):
             for y in xrange(new_size[1]):
                 for z in xrange(new_size[2]):
-                    new_data[x*self.NX:(x+1)*self.NX,y*self.NY:(y+1)*self.NY,z*self.NZ:(z+1)*self.NZ] += self.data
-        return new_data
+                        new_data[x*self.NX:(x+1)*self.NX,y*self.NY:(y+1)*self.NY,z*self.NZ:(z+1)*self.NZ] += self.data
+                        new_xyz[counter*self.natoms:(counter+1)*self.natoms] = self.atomsXYZ + ( (np.array(cell[0]) * x ) + (np.array(cell[1]) * y) + (np.array(cell[2]) * z))
+                        counter += 1 
+        new_data = transform.rescale(new_data,1/np.mean(new_size),order=3)
+        self.data = new_data
+        self.X = ((self.NX * self.X) / float(np.shape(new_data)[0])) * new_size[0]
+        self.Y = ((self.NY * self.Y) / float(np.shape(new_data)[1])) * new_size[1] 
+        self.Z = ((self.NZ * self.Z) / float(np.shape(new_data)[2])) * new_size[2]
+        self.NX, self.NY, self.NZ = np.shape(new_data) 
+        self.atomsXYZ = new_xyz
+        self.atoms *= len(self.atomsXYZ) 
+        self.natoms = len(new_xyz)
+        return cell 
 
+    def super_atoms(self,new_size):
+        cell = np.array((self.NX * self.X, self.NY * self.Y, self.Z * self.NZ))
+        new_xyz = []
+        for atom in self.atomsXYZ:
+            for x in xrange(new_size[0]):
+                for y in xrange(new_size[1]):
+                    for z in xrange(new_size[2]):
+                        new_xyz.append(atom + (x*cell[0]) + (y*cell[1]) + (z*cell[2]))
+        self.atomsXYZ = new_xyz
+        self.natoms = len(self.atomsXYZ)
+        return None
 
 def add_cubes(files):
     cubes = [cube(fin) for fin in files]
