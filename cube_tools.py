@@ -247,6 +247,14 @@ class cube():
 
         return nelectron
 
+    def super_cube(self,new_size):
+        new_data = np.zeros([new_size[0]*self.NX,new_size[1]*self.NY,new_size[2]*self.NZ])
+        for x in xrange(new_size[0]):
+            for y in xrange(new_size[1]):
+                for z in xrange(new_size[2]):
+                    new_data[x*self.NX:(x+1)*self.NX,y*self.NY:(y+1)*self.NY,z*self.NZ:(z+1)*self.NZ] += self.data
+        return new_data
+
 
 def add_cubes(files):
     cubes = [cube(fin) for fin in files]
@@ -295,7 +303,6 @@ def translate_cubes(files,tVector):
         for ind,cout in enumerate(cubes):
             cout.write_cube('translate%d.cube' % ind)
     return None
-
 
 
 def main():
