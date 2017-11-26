@@ -30,6 +30,7 @@ Version      Date              Coder          Changes
 =======   ==========        ===========       =======
 0.1       07/04/2017        A. El-Sayed       Initial Version
 0.2       13/07/2017        A. El-Sayed       Option to run as main program or use as library. All functions written in
+0.3       26/11/2017        A. El-Sayed       Added supercube function. More command line functions.
 '''
 __version__ = 0.2
 
@@ -199,7 +200,7 @@ class cube():
         edensity=np.sum(self.data)
         nelectron=vol*edensity
 
-        print 'Number of electrons: %.7g' % (nelectron)
+        #print 'Number of electrons: %.7g' % (nelectron)
         return nelectron
 
     def cube_int_atom(self,atomID,radius):
@@ -249,6 +250,9 @@ class cube():
         return nelectron
 
     def super_cube(self,new_size):
+        '''
+        Function to make a new cube supercell. Takes in 3D list of how big the supercell should be. 
+        '''
         cell = np.array((self.NX * self.X, self.NY * self.Y, self.Z * self.NZ))
         new_data = np.zeros([new_size[0]*self.NX,new_size[1]*self.NY,new_size[2]*self.NZ])
         new_xyz = self.atomsXYZ 
@@ -270,19 +274,8 @@ class cube():
         self.atomsXYZ = new_xyz
         self.atoms *= len(self.atomsXYZ) 
         self.natoms = len(new_xyz)
-        return cell 
+        return None 
 
-    def super_atoms(self,new_size):
-        cell = np.array((self.NX * self.X, self.NY * self.Y, self.Z * self.NZ))
-        new_xyz = []
-        for atom in self.atomsXYZ:
-            for x in xrange(new_size[0]):
-                for y in xrange(new_size[1]):
-                    for z in xrange(new_size[2]):
-                        new_xyz.append(atom + (x*cell[0]) + (y*cell[1]) + (z*cell[2]))
-        self.atomsXYZ = new_xyz
-        self.natoms = len(self.atomsXYZ)
-        return None
 
 def add_cubes(files):
     cubes = [cube(fin) for fin in files]
@@ -332,6 +325,23 @@ def translate_cubes(files,tVector):
             cout.write_cube('translate%d.cube' % ind)
     return None
 
+def expand_cell(files,new_size):
+    cube_in = cube(files[0])
+    cube_in.super_cube(new_size)
+    cube_in.write_cube('expand_%dx%dx%d.cube' % (new_size[0],new_size[1],new_size[2]))
+    return None
+
+def cube_integrate(files):
+    cube_in = cube(files[0])
+    cube_int_total = cube_in.cube_int()
+    print 'Integral of cube file is: %9.3f' % cube_int_total
+    return None
+    
+
+def planar_average_cube(files,vector):
+    cube_in = cube(files[0])
+    planav = cube_in.planar_average(vector[0])
+    return planav
 
 def main():
     parser = argparse.ArgumentParser(description="A python library and tool to read in and manipulate Gaussian cube files. This code allows you to:\n    Read and write Gaussian cube files\n    Translate and rotate cube data\n    Integrate around a particular atom\n    Integrate around a sphere\n    Integrate around the whole cube file",formatter_class=RawTextHelpFormatter)
@@ -341,6 +351,9 @@ def main():
     parser.add_argument("-a","--add",help="Add two or more cube files together",action = "store_true")
     parser.add_argument("-s","--subtract",help="Subtract two or more cube files together",action = "store_true")
     parser.add_argument("-p","--power",help="Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).",nargs='?',const=2,type=int)
+    parser.add_argument("-i","--integrate",help="Integrate over the entire cube file.")
+    parser.add_argument("-e","--expand",help="Make a supercell of the specified cube file",nargs=3,type=float)
+    parser.add_argument("-m","--mean",help="Calculate planar average of a cube file along a particular axis. Arguments are x,y or z.",nargs=1,type=str)
     parser.add_argument("-t","--translate",help="Translate a cube file. Requires a translation vector as an argument.", nargs = 3,type=float)
     if len(argv) <= 2:
         parser.print_help()
@@ -365,6 +378,19 @@ def main():
     if args.translate:
         if args.Files:
             translate_cubes(args.Files,args.translate)
+    if args.expand:
+        if args.Files:
+            print type(args.expand[0])
+            expand_cell(args.Files,map(int,args.expand)) 
+    if args.mean:
+        if args.Files:
+            PlanAv = planar_average_cube(args.Files,args.mean) 
+            fout = open('planav.dat','w')
+            for line in PlanAv:
+                fout.write('%9.4f  %9.4f\n' % (line[0],line[1]))
+    if args.integrate:
+        if args.Files:
+             cube_integrate(args.Files) 
 
     return None
 
