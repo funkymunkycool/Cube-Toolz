@@ -32,7 +32,7 @@ Version      Date              Coder          Changes
 0.2       13/07/2017        A. El-Sayed       Option to run as main program or use as library. All functions written in
 0.3       26/11/2017        A. El-Sayed       Added supercube function. More command line functions.
 '''
-__version__ = 0.2
+__version__ = 0.3
 
 class cube():
     '''
