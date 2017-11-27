@@ -27,5 +27,9 @@ optional arguments:
 * -s, --subtract        Subtract two or more cube files together
 * -p [POWER], --power [POWER]  Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).
 * -t TRANSLATE TRANSLATE TRANSLATE, --translate TRANSLATE TRANSLATE TRANSLATE  Translate a cube file. Requires a translation vector as an argument.
+* -i INTEGRATE, --integrate INTEGRATE  Integrate over the entire cube file.
+* -e EXPAND EXPAND EXPAND, --expand EXPAND EXPAND EXPAND  Make a supercell of the specified cube file
+* -m MEAN, --mean MEAN  Calculate planar average of a cube file along a particular axis. Arguments are x,y or z.
+
 
 usage: cube_tools.py [-h] [-a] [-s] [-p [POWER]] [-t TRANSLATE TRANSLATE TRANSLATE] Files [Files ...]
