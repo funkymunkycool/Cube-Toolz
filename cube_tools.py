@@ -336,7 +336,6 @@ def cube_integrate(files):
     cube_int_total = cube_in.cube_int()
     print 'Integral of cube file is: %9.3f' % cube_int_total
     return None
-    
 
 def planar_average_cube(files,vector):
     cube_in = cube(files[0])
