@@ -31,6 +31,7 @@ Version      Date              Coder          Changes
 0.1       07/04/2017        A. El-Sayed       Initial Version
 0.2       13/07/2017        A. El-Sayed       Option to run as main program or use as library. All functions written in
 0.3       26/11/2017        A. El-Sayed       Added supercube function. More command line functions.
+0.4       19/12/2018        A. El-Sayed       Fixed cube integration around an atom and reference point. Can be called from command line
 '''
 __version__ = 0.3
 
@@ -208,42 +209,45 @@ class cube():
         Integrate the cube data in a sphere around a particular atom. Needs the atom number (note that atom 0 is the first atom). Also needs a radius of the sphere.
         '''
         nelectron = 0.0
-        voxelMatrix = [self.X,self.Y,self.Z]
+        voxelMatrix = np.array([self.X,self.Y,self.Z])
+        radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10) 
         vol = np.linalg.det(voxelMatrix)
-        atomXYZ = self.atomsXYZ[atomID]
+        atomXYZ = np.array(self.atomsXYZ[atomID]) - self.origin
 
         initial = time.time()
         for x in xrange(self.NX):
             for y in xrange(self.NY):
                 for z in xrange(self.NZ):
-                   xPos,yPos,zPos = [x * self.X[0] / 1.88,y * self.Y[1] / 1.88,z * self.Z[2] / 1.88]
-                   distance = np.sqrt((xPos - atomXYZ[0])**2 + (yPos - atomXYZ[1])**2 +(zPos - atomXYZ[2])**2)
-                   if distance <= radius:    nelectron += self.data[x][y][z] * vol
+                   pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]]) 
+                   distance = np.linalg.norm(pos - atomXYZ)
+                   if distance <= radius:
+                       nelectron += self.data[x][y][z] * vol 
         final=time.time()
         forTime = final - initial
         #print 'for loop: %.2f s' % forTime
 
         return nelectron
 
+
     def cube_int_ref(self,ref,radius):
         '''
         Integrate the cube data in a sphere around a point. Needs the atom number (note that atom 0 is the first atom). Also needs the point as a list.
         '''
         nelectron = 0.0
-        ind = 0
         voxelMatrix = [self.X,self.Y,self.Z]
         vol = np.linalg.det(voxelMatrix)
+        ref = np.array(ref)
+        ref = ref * (1 / (physical_constants['Bohr radius'][0] * 1e10)) 
 
         initial = time.time()
         for x in xrange(self.NX):
             for y in xrange(self.NY):
                 for z in xrange(self.NZ):
-                   xPos,yPos,zPos = [x * self.X[0] / 1.88,y * self.Y[1] / 1.88,z * self.Z[2] / 1.88]
-                   distance = np.sqrt((xPos - self.atomsXYZ[atomID][0])**2 + (yPos - self.atomsXYZ[atomID][1])**2 +(zPos - self.atomsXYZ[atomID][2])**2)
+                   pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]]) 
+                   distance = np.linalg.norm(pos - ref)
                    if distance <= radius:
                        nelectron += self.data[x][y][z] * vol
-                   ind += 1
-        final=time.time()
+        final = time.time()
         forTime = final - initial
         #print 'for loop: %.2f s' % forTime
 
@@ -288,7 +292,7 @@ def add_cubes(files):
     cube_out.write_cube('diff.cube')
     return cube_out
 
-def diff1_cubes(files):
+def diff_cubes(files):
     cubes = [cube(fin) for fin in files]
     print "====== Subtracting cube files ======"
     cube_out = copy.deepcopy(cubes[0])
@@ -337,6 +341,22 @@ def cube_integrate(files):
     print 'Integral of cube file is: %9.3f' % cube_int_total
     return None
 
+def cube_integrate_atom(files, atomId, radius):
+    cube_in = cube(files[0])
+    atomId = int(atomId)
+    radius = float(radius)
+    cube_int_total = cube_in.cube_int_atom(atomId, radius)
+    print 'Integral around chosen atom is: %12.9f' % cube_int_total
+    return None
+
+def cube_integrate_ref(files, x, y, z, radius):
+    cube_in = cube(files[0])
+    xyz = np.array([float(x), float(y), float(z)]) 
+    radius = float(radius)
+    cube_int_total = cube_in.cube_int_ref(xyz, radius)
+    print 'Integral around chosen reference point is: %12.9f' % cube_int_total
+    return None
+
 def planar_average_cube(files,vector):
     cube_in = cube(files[0])
     planav = cube_in.planar_average(vector[0])
@@ -351,6 +371,8 @@ def main():
     parser.add_argument("-s","--subtract",help="Subtract two or more cube files together",action = "store_true")
     parser.add_argument("-p","--power",help="Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).",nargs='?',const=2,type=int)
     parser.add_argument("-i","--integrate",help="Integrate over the entire cube file.")
+    parser.add_argument("-ia","--integrateatom",help="Integrate a sphere around a particular atom. Needs atom id and a radius to integrate within.", nargs=2 )
+    parser.add_argument("-ir","--integrateref",help="Integrate a sphere around a reference xyz. Supply x y z r, where r is the radius.", nargs=4 )
     parser.add_argument("-e","--expand",help="Make a supercell of the specified cube file",nargs=3,type=float)
     parser.add_argument("-m","--mean",help="Calculate planar average of a cube file along a particular axis. Arguments are x,y or z.",nargs=1,type=str)
     parser.add_argument("-t","--translate",help="Translate a cube file. Requires a translation vector as an argument.", nargs = 3,type=float)
@@ -390,6 +412,12 @@ def main():
     if args.integrate:
         if args.Files:
              cube_integrate(args.Files) 
+    if args.integrateatom:
+        if args.Files:
+            cube_integrate_atom(args.Files, args.integrateatom[0], args.integrateatom[1]) 
+    if args.integrateref:
+        if args.Files:
+            cube_integrate_ref(args.Files, args.integrateref[0], args.integrateref[1], args.integrateref[2], args.integrateref[3]) 
 
     return None
 
