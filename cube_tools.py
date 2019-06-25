@@ -330,6 +330,17 @@ def diff_cubes(files):
     cube_out.write_cube('diff.cube')
     return cube_out
 
+def mult_cubes(files):
+    cubes = [cube(fin) for fin in files]
+    print( "====== Multiplying cube files ======")
+    cube_out = copy.deepcopy(cubes[0])
+
+    for ctmp in cubes[1:]:
+        cube_out.data *= ctmp.data
+    print( "====== Writing output cube as mult.cube ======")
+    cube_out.write_cube('mult.cube')
+    return cube_out
+
 def square_cubes(files,power):
     cubes = [cube(fin) for fin in files]
     print( "====== Squaring cube files ======")
@@ -404,6 +415,7 @@ def main():
     parser.add_argument("Files",help="Cube files used in program",nargs = '+')
     parser.add_argument("-a","--add",help="Add two or more cube files together",action = "store_true")
     parser.add_argument("-s","--subtract",help="Subtract two or more cube files together",action = "store_true")
+    parser.add_argument("-M","--multiply",help="Multiply two or more cube files together",action = "store_true")
     parser.add_argument("-p","--power",help="Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).",nargs='?',const=2,type=int)
     parser.add_argument("-i","--integrate",help="Integrate over the entire cube file.")
     parser.add_argument("-ia","--integrateatom",help="Integrate a sphere around a particular atom. Needs atom id and a radius to integrate within.", nargs=2 )
@@ -428,6 +440,11 @@ def main():
             diff_cubes(args.Files)
         else:
             print( "Error: To use the subtract function, two or more cube files need to be specified.")
+    if args.multiply:
+        if len(args.Files) >= 2:
+            mult_cubes(args.Files)
+        else:
+            print( "Error: To use the multiply function, two or more cube files need to be specified.")
     if args.power:
         if args.Files:
             square_cubes(args.Files,args.power)

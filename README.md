@@ -25,6 +25,7 @@ optional arguments:
 * -h, --help            show this help message and exit
 * -a, --add             Add two or more cube files together
 * -s, --subtract        Subtract two or more cube files together
+* -M, --multiply        Multiply two or more cube files together
 * -p [POWER], --power [POWER]  Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).
 * -t TRANSLATE TRANSLATE TRANSLATE, --translate TRANSLATE TRANSLATE TRANSLATE  Translate a cube file. Requires a translation vector as an argument.
 * -i INTEGRATE, --integrate INTEGRATE  Integrate over the entire cube file.
