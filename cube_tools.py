@@ -239,13 +239,14 @@ class cube():
         voxelMatrix = np.array([self.X,self.Y,self.Z])
         radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10)
         vol = np.linalg.det(voxelMatrix)
-        atomXYZ = np.array(self.atomsXYZ[atomID]) - self.origin
+        atomXYZ = np.array(self.atomsXYZ[atomID]) + self.origin
 
         initial = time.time()
         for x in range(self.NX):
             for y in range(self.NY):
                 for z in range(self.NZ):
                    pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]])
+                   pos += self.origin
                    distance = np.linalg.norm(pos - atomXYZ)
                    if distance <= radius:
                        nelectron += self.data[x][y][z] * vol
