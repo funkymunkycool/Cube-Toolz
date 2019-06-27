@@ -259,7 +259,7 @@ class cube():
 
     def cube_int_ref(self,ref,radius):
         '''
-        Integrate the cube data in a sphere around a point. Needs the atom number (note that atom 0 is the first atom). Also needs the point as a list.
+        Integrate the cube data in a sphere around a point. Also needs the point as a list.
         '''
         nelectron = 0.0
         voxelMatrix = [self.X,self.Y,self.Z]
@@ -272,6 +272,7 @@ class cube():
             for y in range(self.NY):
                 for z in range(self.NZ):
                    pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]])
+                   pos += self.origin
                    distance = np.linalg.norm(pos - ref)
                    if distance <= radius:
                        nelectron += self.data[x][y][z] * vol
