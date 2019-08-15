@@ -12,6 +12,12 @@ A python library and tool to read in and manipulate Gaussian cube files. This co
 
 Requires numpy and scipy. If you have pip, you can just run
 ```
+pip install git+https://github.com/funkymunkycool/Cube-Toolz.git
+```
+to install the ``cube_tools`` module and an executable of the same name into the currently preferred Python package installation directories.
+
+Alternatively, you can clone the repository manually and run
+```
 pip install -r requirements.txt
 ```
 to install all the requirements.
