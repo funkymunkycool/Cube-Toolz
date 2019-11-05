@@ -266,12 +266,16 @@ class cube():
         vol = np.linalg.det(voxelMatrix)
         ref = np.array(ref)
         ref = ref * (1 / (physical_constants['Bohr radius'][0] * 1e10))
+        ref += self.origin
+        radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10)
+
 
         initial = time.time()
         for x in range(self.NX):
             for y in range(self.NY):
                 for z in range(self.NZ):
-                   pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]])
+                   # pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]])
+                   pos = x*self.X + y*self.Y + z*self.Z
                    pos += self.origin
                    distance = np.linalg.norm(pos - ref)
                    if distance <= radius:
@@ -384,6 +388,7 @@ def expand_cell(files,new_size):
     return None
 
 def cube_integrate(files):
+    # print(type(files))
     cube_in = cube(files[0])
     cube_int_total = cube_in.cube_int()
     print( 'Integral of cube file is: %9.3f' % cube_int_total)
@@ -419,7 +424,7 @@ def main():
     parser.add_argument("-s","--subtract",help="Subtract two or more cube files together",action = "store_true")
     parser.add_argument("-M","--multiply",help="Multiply two or more cube files together",action = "store_true")
     parser.add_argument("-p","--power",help="Raise the cube file to a certain power. Any number of cube files can be specified and they will all be raised to the power defined. Default is to square the cube file(s).",nargs='?',const=2,type=int)
-    parser.add_argument("-i","--integrate",help="Integrate over the entire cube file.")
+    parser.add_argument("-i","--integrate",help="Integrate over the entire cube file.", action = "store_true")
     parser.add_argument("-ia","--integrateatom",help="Integrate a sphere around a particular atom. Needs atom id and a radius to integrate within.", nargs=2 )
     parser.add_argument("-ir","--integrateref",help="Integrate a sphere around a reference xyz. Supply x y z r, where r is the radius.", nargs=4 )
     parser.add_argument("-e","--expand",help="Make a supercell of the specified cube file",nargs=3,type=float)
@@ -431,6 +436,7 @@ def main():
         parser.print_help()
 
     args = parser.parse_args()
+
 
     if args.add:
         if len(args.Files) >= 2:
