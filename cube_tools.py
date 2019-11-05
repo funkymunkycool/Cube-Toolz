@@ -195,17 +195,16 @@ class cube():
         '''
         Calculate the planar average along an axis. The axis is given as a string of either x,y or z.
         '''
-        bohrM=physical_constants['Bohr radius'][0]
-        bohrA=physical_constants['Bohr radius'][0]*1e10
+        bohrA = physical_constants['Bohr radius'][0]*1e10
+        vol = np.linalg.det(np.array([self.X, self.Y, self.Z]))
+        dx, dy, dz = (self.X + self.Y + self.Z) * bohrA
+
         if axis == 'x':
-            yz_area=np.linalg.norm(np.cross((self.NY*self.Y*bohrM),(self.NZ*bohrM*self.Z)))
-            PlanAv=np.array([[nx*self.X[0]*bohrA,np.sum(self.data[nx,::])/(self.NY*self.NZ)] for nx in range(self.NX)])
+            PlanAv = np.array([[ nx * self.X[0] * bohrA, (np.sum(self.data[nx,::]) * vol) / dx] for nx in range(self.NX)])
         elif axis == 'y':
-            xy_area=np.linalg.norm(np.cross((self.NX*self.X*bohrM),(self.NZ*bohrM*self.Z)))
-            PlanAv=np.array([[ny*self.Y[1]*bohrA,np.sum(self.data[:,ny,:])/(self.NX*self.NZ)] for ny in range(self.NY)])
+            PlanAv = np.array([[ ny * self.Y[1] * bohrA, (np.sum(self.data[:,ny,:]) * vol) / dy] for ny in range(self.NY)])
         elif axis == 'z':
-            xy_area=np.linalg.norm(np.cross((self.NY*self.Y*bohrM),(self.NX*bohrM*self.X)))
-            PlanAv=np.array([[nz*self.Z[2]*bohrA,np.sum(self.data[nz])/(self.NY*self.NZ)] for nz in range(self.NZ)])
+            PlanAv = np.array([[ nz * self.Z[2] * bohrA, np.sum(self.data[:, :, nz] * vol) / dz] for nz in range(self.NZ)])
         else:
             print( '%s' % 'No axis specified! Planar average will return zero and fail.')
             PlanAv = 0.0
@@ -231,37 +230,33 @@ class cube():
         #print 'Number of electrons: %.7g' % (nelectron)
         return nelectron
 
-    def cube_int_atom(self,atomID,radius):
+
+    def cube_int_atom(self, atomID, radius):
         '''
         Integrate the cube data in a sphere around a particular atom. Needs the atom number (note that atom 0 is the first atom). Also needs a radius of the sphere.
         '''
-        nelectron = 0.0
         voxelMatrix = np.array([self.X,self.Y,self.Z])
         radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10)
         vol = np.linalg.det(voxelMatrix)
         atomXYZ = np.array(self.atomsXYZ[atomID]) + self.origin
 
-        initial = time.time()
-        for x in range(self.NX):
-            for y in range(self.NY):
-                for z in range(self.NZ):
-                   pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]])
-                   pos += self.origin
-                   distance = np.linalg.norm(pos - atomXYZ)
-                   if distance <= radius:
-                       nelectron += self.data[x][y][z] * vol
-        final=time.time()
-        forTime = final - initial
-        #print 'for loop: %.2f s' % forTime
+        Z, Y, X = np.ogrid[:self.NX, :self.NY, :self.NZ]
+        dx, dy, dz = self.X + self.Y + self.Z
+        X = X * dx
+        Y = Y * dy
+        Z = Z * dz
+
+        dist_from_center = np.sqrt((X - atomXYZ[0])**2 + (Y - atomXYZ[1])**2 + (Z - atomXYZ[2])**2)
+        mask = dist_from_center <= radius
+
+        nelectron = np.sum(mask * self.data * vol)
 
         return nelectron
-
 
     def cube_int_ref(self,ref,radius):
         '''
         Integrate the cube data in a sphere around a point. Also needs the point as a list.
         '''
-        nelectron = 0.0
         voxelMatrix = [self.X,self.Y,self.Z]
         vol = np.linalg.det(voxelMatrix)
         ref = np.array(ref)
@@ -269,20 +264,17 @@ class cube():
         ref += self.origin
         radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10)
 
+        Z, Y, X = np.ogrid[:self.NX, :self.NY, :self.NZ]
+        dx, dy, dz = self.X + self.Y + self.Z
+        X = X * dx
+        Y = Y * dy
+        Z = Z * dz
 
-        initial = time.time()
-        for x in range(self.NX):
-            for y in range(self.NY):
-                for z in range(self.NZ):
-                   # pos = np.array([x * self.X[0],y * self.Y[1],z * self.Z[2]])
-                   pos = x*self.X + y*self.Y + z*self.Z
-                   pos += self.origin
-                   distance = np.linalg.norm(pos - ref)
-                   if distance <= radius:
-                       nelectron += self.data[x][y][z] * vol
-        final = time.time()
-        forTime = final - initial
-        #print 'for loop: %.2f s' % forTime
+        dist_from_center = np.sqrt((X - ref[0])**2 + (Y - ref[1])**2 + (Z - ref[2])**2)
+        mask = dist_from_center <= radius
+
+        nelectron = np.sum(mask * self.data * vol)
+
 
         return nelectron
 
@@ -428,7 +420,7 @@ def main():
     parser.add_argument("-ia","--integrateatom",help="Integrate a sphere around a particular atom. Needs atom id and a radius (in Angstrom) to integrate within.", nargs=2 )
     parser.add_argument("-ir","--integrateref",help="Integrate a sphere around a reference xyz (given in Angstrom). Supply x y z r, where r is the radius (in Angstrom).", nargs=4 )
     parser.add_argument("-e","--expand",help="Make a supercell of the specified cube file",nargs=3,type=float)
-    parser.add_argument("-m","--mean",help="Calculate planar average of a cube file along a particular axis. Arguments are x,y or z.",nargs=1,type=str)
+    parser.add_argument("-m","--mean",help="Calculate planar average of a cube file along a particular axis. Normalized to give total number of electrons. Arguments are x,y or z.",nargs=1,type=str)
     parser.add_argument("-t","--translate",help="Translate a cube file. Requires a translation vector as an argument.", nargs = 3,type=float)
     parser.add_argument("-r","--rotate",help="Rotate a cube file. Requires an angle and an axis around which to rotate as an argument. The axis is provided with the -ax flag.", nargs = 1,type=float)
     parser.add_argument("-ax","--axis",help="Axis parameter", nargs = 2,type=int)
