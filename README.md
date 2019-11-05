@@ -9,6 +9,11 @@ A python library and tool to read in and manipulate Gaussian cube files. This co
 - Integrate around a sphere
 - Integrate around the whole cube file
 - Take the planar average
+- Add/subtract/multiply cube files
+
+Planar averages are outputted as a column of distance and electrons. It is normalized to give the total number of electrons.
+
+Integrating around an atom or reference point requires xyz coordinates as an input. They must be given as Angstroms. This holds true for the chosen reference point too.  
 
 Requires numpy and scipy. If you have pip, you can just run
 ```
@@ -27,7 +32,7 @@ This is designed to be used either as a library, or to be run from the command l
 positional arguments:
   Files                 Cube files used in program
 
-optional arguments: 
+optional arguments:
 * -h, --help            show this help message and exit
 * -a, --add             Add two or more cube files together
 * -s, --subtract        Subtract two or more cube files together
@@ -36,9 +41,9 @@ optional arguments:
 * -t TRANSLATE TRANSLATE TRANSLATE, --translate TRANSLATE TRANSLATE TRANSLATE  Translate a cube file. Requires a translation vector as an argument.
 * -i INTEGRATE, --integrate INTEGRATE  Integrate over the entire cube file.
 * -ia INTEGRATE, --integrate INTEGRATE atomId Radius  Integrate a sphere around an atom. Requires atom ID and the radius of the sphere
-* -ir INTEGRATE, --integrate INTEGRATE x y z Radius  Integrate a sphere around a point. Requires x y z coordinate of point and the radius of the sphere 
+* -ir INTEGRATE, --integrate INTEGRATE x y z Radius  Integrate a sphere around a point. Requires x y z coordinate of point and the radius of the sphere
 * -e EXPAND EXPAND EXPAND, --expand EXPAND EXPAND EXPAND  Make a supercell of the specified cube file
-* -m MEAN, --mean MEAN  Calculate planar average of a cube file along a particular axis. Arguments are x,y or z.
+* -m MEAN, --mean MEAN  Calculate planar average of a cube file along a particular axis. Normalized to give the total number of electrons (particles). Arguments are necessarily x,y or z.
 
 
 usage: cube_tools.py [-h] [-a] [-s] [-p [POWER]] [-t TRANSLATE TRANSLATE TRANSLATE] Files [Files ...]
