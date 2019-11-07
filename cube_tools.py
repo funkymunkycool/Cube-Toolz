@@ -238,15 +238,13 @@ class cube():
         voxelMatrix = np.array([self.X,self.Y,self.Z])
         radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10)
         vol = np.linalg.det(voxelMatrix)
-        atomXYZ = np.array(self.atomsXYZ[atomID]) + self.origin
+        atomXYZ = np.array(self.atomsXYZ[atomID]) #+ self.origin
 
-        Z, Y, X = np.ogrid[:self.NX, :self.NY, :self.NZ]
-        dx, dy, dz = self.X + self.Y + self.Z
-        X = X * dx
-        Y = Y * dy
-        Z = Z * dz
+        ZYX = np.ogrid[:self.NX, :self.NY, :self.NZ]
+        dZYX = self.Z + self.Y + self.X
+        ZYX = ZYX * dZYX
 
-        dist_from_center = np.sqrt((X - atomXYZ[0])**2 + (Y - atomXYZ[1])**2 + (Z - atomXYZ[2])**2)
+        dist_from_center = np.linalg.norm(ZYX - atomXYZ)
         mask = dist_from_center <= radius
 
         nelectron = np.sum(mask * self.data * vol)
@@ -259,18 +257,14 @@ class cube():
         '''
         voxelMatrix = [self.X,self.Y,self.Z]
         vol = np.linalg.det(voxelMatrix)
-        ref = np.array(ref)
-        ref = ref * (1 / (physical_constants['Bohr radius'][0] * 1e10))
-        ref += self.origin
+        ref = np.array(ref) * (1 / (physical_constants['Bohr radius'][0] * 1e10))
         radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10)
 
-        Z, Y, X = np.ogrid[:self.NX, :self.NY, :self.NZ]
-        dx, dy, dz = self.X + self.Y + self.Z
-        X = X * dx
-        Y = Y * dy
-        Z = Z * dz
+        ZYX = np.ogrid[:self.NX, :self.NY, :self.NZ]
+        dZYX = self.Z + self.Y + self.X
+        ZYX = ZYX * dZYX
 
-        dist_from_center = np.sqrt((X - ref[0])**2 + (Y - ref[1])**2 + (Z - ref[2])**2)
+        dist_from_center = np.linalg.norm(ZYX - ref)
         mask = dist_from_center <= radius
 
         nelectron = np.sum(mask * self.data * vol)
