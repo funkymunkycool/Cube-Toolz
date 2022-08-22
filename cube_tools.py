@@ -260,9 +260,10 @@ class cube():
         ref = np.array(ref) * (1 / (physical_constants['Bohr radius'][0] * 1e10))
         radius *= 1 / (physical_constants['Bohr radius'][0] * 1e10)
 
-        ZYX = np.ogrid[:self.NX, :self.NY, :self.NZ]
+        ZYX = np.array(np.ogrid[:self.NX, :self.NY, :self.NZ], dtype = object)
         dZYX = self.Z + self.Y + self.X
-        ZYX = ZYX * dZYX
+        ZYX *= dZYX
+
 
         dist_from_center = np.linalg.norm(ZYX - ref)
         mask = dist_from_center <= radius
